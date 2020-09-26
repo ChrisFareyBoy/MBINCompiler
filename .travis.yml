@@ -31,6 +31,7 @@ script:
 
 before_deploy:
     # Only want to try and get the version if we have the commit being tagged. Otherwise we can only build docs on tagged builds.
+    - "echo \"Tag: $TRAVIS_TAG\""
     - ./pre_deploy.sh
     #
     # Set up git user name and tag this commit
@@ -53,24 +54,8 @@ deploy:
         - "Build/Release/win-x64/MBINCompiler.exe"
         - "report.json"
     on:
-        branch: development
         tags: true
-        condition: "$TRAVIS_TAG =~ ^v[[:digit:]]"
-
-deploy:
-    provider: releases
-    name: "${TRAVIS_TAG}"
-    body: "${TRAVIS_TAG}"
-    api_key: "${GITHUB_TOKEN}"
-    skip_cleanup: true
-    file:
-        - "Build/Release/libMBIN.dll"
-        - "Build/Release/win-x64/MBINCompiler.exe"
-        - "report.json"
-    on:
-        branch: master
-        tags: true
-        condition: "$TRAVIS_TAG =~ ^v[[:digit:]]"
+        condition: (branch IN (development, master)) AND "$TRAVIS_TAG =~ ^v[[:digit:]]"
 
 # Deploy the docs
 deploy:
@@ -80,4 +65,5 @@ deploy:
     keep_history: true
     local_dir: "html_docs/site"
     on:
-        branch: development
+        # deploy the docs when the commit message starts with [doc]
+        condition: (branch IN (development, master)) AND commit_message =~ ^(\[doc\] )(.*)
